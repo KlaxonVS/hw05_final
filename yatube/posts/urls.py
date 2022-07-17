@@ -26,4 +26,3 @@ urlpatterns = [
         name='profile_unfollow'
     ),
 ]
-
