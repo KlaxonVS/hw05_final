@@ -8,6 +8,7 @@ from .forms import PostForm, CommentForm
 from .models import Group, Post, Comment, Follow
 from .utils import paginate_me, paginate_comments
 
+
 User = get_user_model()
 
 
@@ -51,7 +52,9 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm()
-    comment_list = Comment.objects.select_related('post').filter(post_id=post.pk)
+    comment_list = Comment.objects.select_related('post').filter(
+        post_id=post.pk
+    )
     comments = paginate_comments(request, comment_list)
     context = {
         'post': post,
@@ -77,7 +80,8 @@ def post_edit(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     if request.user != post.author:
         return redirect('posts:post_detail', post_id)
-    form = PostForm(request.POST or None, files=request.FILES or None, instance=post)
+    form = PostForm(request.POST or None, files=request.FILES or None,
+                    instance=post)
     if form.is_valid():
         form.save()
         return redirect('posts:post_detail', post_id)
@@ -126,5 +130,3 @@ def profile_unfollow(request, username):
     unfollow = Follow.objects.get(user=follower, author=author)
     unfollow.delete()
     return redirect('posts:profile', username=author)
-
-

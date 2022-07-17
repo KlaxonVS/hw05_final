@@ -106,6 +106,10 @@ class PostFormTest(TestCase):
                 args=(self.group.slug,))
         )
         self.assertIn(Post.objects.first(), group_response.context['page_obj'])
+        comment_form = self.authorized_author.get(
+            reverse('posts:post_detail', args=(self.post.id,))
+        )
+        self.assertIsInstance(comment_form.context['form'], CommentForm)
 
     def test_post_edit(self):
         post_count = Post.objects.count()
