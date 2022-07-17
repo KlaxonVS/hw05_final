@@ -4,6 +4,10 @@ __pycache__/
 *$py.class
 
 # C extensions
+#My ignore
+/yatube/static/
+/yatube/media/
+
 *.so
 
 # Distribution / packaging

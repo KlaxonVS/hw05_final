@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if form.instance.pk %}Редактировать запись{% else %}Добавить запись{% endif %} 
+{% endblock %}
+{% block content %}
+{% load user_filters %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+      <div class="card">
+        <div class="card-header">
+          {% if form.instance.pk %}Редактировать запись{% else %}Добавить запись{% endif %}
+        </div>
+        <div class="card-body">
+          {% load user_filters %}
+          {% include 'includes/error_block.html' %}
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% include 'includes/common_form.html' %}
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+              {% if form.instance.pk %}Сохранить{% else %}Добавить{% endif %}
+            </button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %} 

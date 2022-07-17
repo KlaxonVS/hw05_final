@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Войти{% endblock %}
+{% block content %}
+{% load user_filters %}
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+      <div class="card">
+        <div class="card-header">
+          Войти на сайт
+        </div>
+        <div class="card-body">
+          {% include 'includes/error_block.html' %}
+          <form method="post"
+            {% if action_url %}
+              action="{% url action_url %}"
+            {% endif %}
+          >
+          {% csrf_token %}
+          {% include 'includes/common_form.html' %}
+          <div class="col-md-6 offset-md-4">
+            <button type="submit" class="btn btn-primary">
+              Войти
+            </button>
+            {% url 'users:password_reset' as reset_password %}
+            {% if reset_password %}
+            <a href="{{ reset_password }}" class="btn btn-link">
+              Забыли пароль?
+            </a>
+            {% else %}
+            <a href="{% url 'posts:index' %}" class="btn btn-link">
+                Функция восстановления пароля скоро
+            </a>
+            {% endif %}
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %} 

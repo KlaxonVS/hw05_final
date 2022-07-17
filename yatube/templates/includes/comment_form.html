@@ -1,0 +1,68 @@
+{% load user_filters %}
+
+{% if user.is_authenticated %}
+  <div class="card my-4">
+    <h5 class="card-header">Добавить комментарий:</h5>
+    <div class="card-body">
+      <form method="post" action="{% url 'posts:add_comment' post.id %}">
+        {% csrf_token %}
+        <div class="form-group mb-2">
+          {{ form.text|addclass:"form-control" }}
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+
+{% for comment in comments %}
+  <div class="media mb-4">
+    <div class="media-body">
+      <h5 class="mt-0">
+        <a href="{% url 'posts:profile' comment.author.username %}">
+          {{ comment.author.username }}
+        </a>
+      </h5>
+        <p>
+         {{ comment.text }}
+        </p>
+      </div>
+    </div>
+{% endfor %}
+{% if comments.has_other_pages %}
+  <nav aria-label="Page navigation" class="my-5">
+    <ul class="pagination justify-content-center">
+      {% if comments.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">Первая</a></li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ comments.previous_page_number }}">
+            Предыдущая
+          </a>
+        </li>
+      {% endif %}
+      {% for i in comments.paginator.page_range %}
+        {% if comments.number == i %}
+          <li class="page-item active">
+            <span class="page-link">{{ i }}</span>
+          </li>
+        {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+      {% if comments.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ comments.next_page_number }}">
+            Следующая
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ comments.paginator.num_pages }}">
+            Последняя
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
