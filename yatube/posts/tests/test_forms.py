@@ -156,7 +156,7 @@ class PostFormTest(TestCase):
 
     def test_comment_create_guest(self):
         comment_count = Comment.objects.count()
-        form_data = {'text': 'Тестовый коментарий',}
+        form_data = {'text': 'Тестовый коментарий', }
         response = self.client.post(
             reverse('posts:add_comment', args=(self.post.id,)),
             form_data

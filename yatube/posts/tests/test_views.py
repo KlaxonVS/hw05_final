@@ -224,7 +224,7 @@ class TestPostViews(TestCase):
         self.assertEqual(follow_count, follow_count2)
 
     def test_cash(self):
-        new_post = {'text': 'Проверка кэша',}
+        new_post = {'text': 'Проверка кэша', }
         self.authorized_author.post(
             reverse('posts:post_create'),
             new_post
@@ -233,10 +233,10 @@ class TestPostViews(TestCase):
         response = self.client.get(reverse('posts:index'))
         self.assertIn(f'/posts/{post2.id}/', str(response.content))
         post2.delete()
-        self.assertIn(f'/posts/1/', str(response.content))
+        self.assertIn('/posts/1/', str(response.content))
         self.assertNotIn(post2, response.context['page_obj'])
         cache.clear()
-        self.assertNotIn(f'/posts/1/', response.context['page_obj'])
+        self.assertNotIn('/posts/1/', response.context['page_obj'])
 
 
 class PaginatorViewTest(TestCase):
