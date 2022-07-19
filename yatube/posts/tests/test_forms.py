@@ -44,6 +44,7 @@ class PostFormTest(TestCase):
         super().tearDownClass()
 
     def test_labels(self):
+        """Проверка меток полей формы"""
         labels = {
             'text': 'Текст поста',
             'group': 'Группа',
@@ -55,6 +56,10 @@ class PostFormTest(TestCase):
                 self.assertEquals(response_label, label_text)
 
     def test_post_create(self):
+        """
+        Проверка создания поста с изображением, а также, что пост появляется
+        на странице заявленной группы
+        """
         post_count = Post.objects.count()
         test_gif = (
             b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -106,12 +111,12 @@ class PostFormTest(TestCase):
                 args=(self.group.slug,))
         )
         self.assertIn(Post.objects.first(), group_response.context['page_obj'])
-        comment_form = self.authorized_author.get(
-            reverse('posts:post_detail', args=(self.post.id,))
-        )
-        self.assertIsInstance(comment_form.context['form'], CommentForm)
 
     def test_post_edit(self):
+        """
+        Проверка возможности редактировать пост: изменения текста и группы, его
+        отоброжения на странице новой группы и отсутствия в старой
+        """
         post_count = Post.objects.count()
         self.group2 = Group.objects.create(
             title='Тестовая группа 2',
@@ -142,6 +147,10 @@ class PostFormTest(TestCase):
         self.assertEqual(post_count2, post_count)
 
     def test_post_create_guest(self):
+        """
+        Проверка невозможности создать пост неавторизованным пользователем.
+        Его переадресация на страницу входа в аккаунт
+        """
         post_count = Post.objects.count()
         form_data = {'text': 'Тестовый пост', 'group': self.group.id, }
         response = self.client.post(
@@ -155,6 +164,11 @@ class PostFormTest(TestCase):
         self.assertEqual(post_count2, post_count)
 
     def test_comment_create_guest(self):
+        """
+        Проверка невозможности написать комментарий
+        неавторизованным пользователем.
+        Его переадресация на страницу входа в аккаунт
+        """
         comment_count = Comment.objects.count()
         form_data = {'text': 'Тестовый коментарий', }
         response = self.client.post(
@@ -170,6 +184,7 @@ class PostFormTest(TestCase):
         self.assertEqual(comment_count2, comment_count)
 
     def test_comment_create(self):
+        """Проверка создания комментария и его формы"""
         comment_count = Comment.objects.count()
         form_data = {'text': 'Новый коментарий'}
         response = self.authorized_author.post(
@@ -190,3 +205,7 @@ class PostFormTest(TestCase):
             new_comment.text,
             form_data['text']
         )
+        comment_form = self.authorized_author.get(
+            reverse('posts:post_detail', args=(self.post.id,))
+        )
+        self.assertIsInstance(comment_form.context['form'], CommentForm)

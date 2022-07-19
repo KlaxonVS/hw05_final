@@ -60,13 +60,13 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments',
+        related_name='commentator',
         verbose_name='Комментатор'
     )
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name='comments',
+        related_name='commented',
         verbose_name='Пост'
     )
     created = models.DateTimeField('Дата комментария', auto_now_add=True)

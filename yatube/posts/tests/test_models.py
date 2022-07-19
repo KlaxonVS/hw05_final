@@ -41,6 +41,7 @@ class PostModelTest(TestCase):
                                  error)
 
     def test_verbose_name(self):
+        """Пороверка соответствия имен полей модели"""
         post = PostModelTest.post
         field_verboses = {
             'text': 'Пост',
@@ -56,6 +57,7 @@ class PostModelTest(TestCase):
                                  )
 
     def test_help_text(self):
+        """Пороверка соответствия описания полей модели"""
         post = PostModelTest.post
         field_help_texts = {
             'text': 'Текст нового поста',

@@ -81,12 +81,17 @@ class TestPostViews(TestCase):
         self.authorized_not_follower = Client()
         self.authorized_not_follower.force_login(self.not_follower)
 
+    def tearDown(self):
+        cache.clear()
+
     @classmethod
     def tearDownClass(cls):
+        cache.clear()
         shutil.rmtree(TEST_DIR, ignore_errors=True)
         super().tearDownClass()
 
     def check_context(self, response, post=False):
+        """Проверка context поста"""
         context = (response.context['post']
                    if post else
                    response.context['page_obj'][0])
@@ -95,19 +100,22 @@ class TestPostViews(TestCase):
         self.assertEqual(context.text, self.post.text)
         self.assertEqual(context.group, self.post.group)
         self.assertEqual(context.image, self.post.image)
+        self.assertContains(response, '<img')
 
     def test_index_context(self):
-        cache.clear()
+        """Проверка context главной страницы"""
         response = self.authorized_author.get(reverse('posts:index'))
         self.check_context(response)
 
     def test_follow_page_context(self):
+        """Проверка context страницы подписок"""
         response = self.authorized_client_follower.get(
             reverse('posts:follow_index')
         )
         self.check_context(response)
 
     def test_group_list_context(self):
+        """Проверка context страницы группы"""
         response = self.authorized_author.get(
             reverse('posts:group_list', args=(self.group.slug,))
         )
@@ -116,6 +124,7 @@ class TestPostViews(TestCase):
         self.assertEqual(group_check, self.group)
 
     def test_profile_context(self):
+        """Проверка context страницы профиля"""
         response = self.authorized_client_follower.get(
             reverse('posts:profile', args=(self.author.username,))
         )
@@ -131,6 +140,7 @@ class TestPostViews(TestCase):
         self.assertEqual(following_check, None)
 
     def test_post_detail_context(self):
+        """Проверка context страницы поста"""
         response = self.authorized_author.get(
             reverse('posts:post_detail', args=(self.post.id,))
         )
@@ -139,6 +149,9 @@ class TestPostViews(TestCase):
         self.assertEqual(comments_check, self.comment)
 
     def test_page_context_with_form(self):
+        """
+        Проверка context страниц создания и редактированияпоста с формой
+        """
         form_fields = (
             ('text', forms.fields.CharField),
             ('group', forms.fields.ChoiceField),
@@ -160,6 +173,9 @@ class TestPostViews(TestCase):
                         self.assertIsInstance(field, expected)
 
     def test_post_in_right_places(self):
+        """
+        Проверка нахождения постов в соответствующих группах
+        """
         self.group2 = Group.objects.create(title='Тестовая группа 2',
                                            slug='test-slug2',)
         self.post2 = Post.objects.create(author=self.author,
@@ -176,7 +192,11 @@ class TestPostViews(TestCase):
         self.assertEqual(self.post2.group, self.group)
 
     def test_follow_in_right_places(self):
-        new_post = {'text': 'Проверка кэша', }
+        """
+        Новый пост созданным автором в подписках
+        отображается на странице подписок
+        """
+        new_post = {'text': 'Новый пост', }
         self.authorized_author.post(
             reverse('posts:post_create'),
             new_post
@@ -191,7 +211,9 @@ class TestPostViews(TestCase):
         )
         self.assertNotIn(new_post, not_follower_response.context['page_obj'])
 
-    def test_follow_unfollow(self):
+    def test_follow(self):
+        """Проверка создания подписки"""
+        follow_count = Follow.objects.count()
         follow = self.authorized_not_follower.get(
             reverse('posts:profile_follow', args=(self.author.username,))
         )
@@ -203,19 +225,34 @@ class TestPostViews(TestCase):
             reverse('posts:follow_index'),
         )
         self.assertIn(self.post, follow_page.context['page_obj'])
-        unfollow = self.authorized_not_follower.get(
+        follow_count2 = Follow.objects.count()
+        self.assertEqual(follow_count2, follow_count + 1)
+        follow = Follow.objects.last()
+        self.assertEqual(self.not_follower, follow.user)
+        self.assertEqual(self.author, follow.author)
+
+    def test_unfollow(self):
+        """Проверка удаления подписки"""
+        follow_count = Follow.objects.count()
+        unfollow = self.authorized_client_follower.get(
             reverse('posts:profile_unfollow', args=(self.author.username,))
         )
         self.assertRedirects(
             unfollow,
             reverse('posts:profile', args=(self.author.username,))
         )
-        follow_page2 = self.authorized_not_follower.get(
+        follow_page2 = self.authorized_client_follower.get(
             reverse('posts:follow_index'),
         )
         self.assertNotIn(self.post, follow_page2.context['page_obj'])
+        follow_count2 = Follow.objects.count()
+        self.assertEqual(follow_count2, follow_count - 1)
 
     def test_follow_not_twice(self):
+        """
+        При попытке дважды подписаться на одного авторы
+        запись в базе данных не дублируется
+        """
         follow_count = Follow.objects.count()
         self.authorized_client_follower.get(
             reverse('posts:profile_follow', args=(self.author.username,))
@@ -224,19 +261,23 @@ class TestPostViews(TestCase):
         self.assertEqual(follow_count, follow_count2)
 
     def test_cash(self):
+        """Проверка работы кэша главной страницы"""
         new_post = {'text': 'Проверка кэша', }
         self.authorized_author.post(
             reverse('posts:post_create'),
             new_post
         )
         post2 = Post.objects.first()
-        response = self.client.get(reverse('posts:index'))
-        self.assertIn(f'/posts/{post2.id}/', str(response.content))
+        response1 = self.client.get(reverse('posts:index'))
+        response_1 = response1.content
         post2.delete()
-        self.assertIn('/posts/1/', str(response.content))
-        self.assertNotIn(post2, response.context['page_obj'])
+        response2 = self.client.get(reverse('posts:index'))
+        response_2 = response2.content
+        self.assertEqual(response_1, response_2)
         cache.clear()
-        self.assertNotIn('/posts/1/', response.context['page_obj'])
+        response3 = self.client.get(reverse('posts:index'))
+        response_3 = response3.content
+        self.assertNotEqual(response_1, response_3)
 
 
 class PaginatorViewTest(TestCase):
@@ -252,10 +293,26 @@ class PaginatorViewTest(TestCase):
                                     group=cls.group,
                                     author=cls.author,)
             )
+        cls.follower = User.objects.create_user(
+            username='test_follower',
+            first_name='Фолловер',
+            last_name='Тестовый',
+        )
+        cls.follow = Follow.objects.create(
+            user=cls.follower,
+            author=cls.author
+        )
+        cls.authorized_client_follower = Client()
+        cls.authorized_client_follower.force_login(cls.follower)
 
     def test_page_contains_records(self):
+        """
+        Проверка работы пагинатора
+        и на странице правильно работает ограничение записей
+        """
         pages_to_test = (
             ('posts:index', None),
+            ('posts:follow_index', None),
             ('posts:group_list', (self.group.slug,)),
             ('posts:profile', (self.author.username,)),
         )
@@ -267,7 +324,7 @@ class PaginatorViewTest(TestCase):
                 )
                 for specific_page, posts in pages:
                     with self.subTest(specific_page=specific_page):
-                        response = self.client.get(
+                        response = self.authorized_client_follower.get(
                             reverse(page, args=arg) + specific_page
                         )
                         self.assertEqual(

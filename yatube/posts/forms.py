@@ -21,3 +21,4 @@ class CommentForm(ModelForm):
         labels = {
             'text': 'Текст комментария'
         }
+        # help_text есть в моделях

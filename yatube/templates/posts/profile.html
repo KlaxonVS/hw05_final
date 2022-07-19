@@ -6,7 +6,9 @@
     <div class="container mb-5 py-5">
       <h1>Все посты пользователя: {{ author.get_full_name }}</h1>
       <h3>Всего постов: {{ page_obj.paginator.count }} </h3>
-      {% if request.user != author %}
+      <h3>Подписчиков: {{ author.following.count }} </h3>
+      <h3>Подписок: {{ author.follower.count }} </h3>
+      {% if request.user != author and request.user.is_authenticated %}
         {% if following %}
           <a
             class="btn btn-lg btn-light"

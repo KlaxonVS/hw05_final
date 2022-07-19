@@ -36,12 +36,20 @@ class PostUrlTests(TestCase):
             ('posts:post_detail', (self.post.id,)),
             ('posts:post_edit', (self.post.id,)),
             ('posts:post_create', None),
+            ('posts:add_comment', (self.post.id,)),
+            ('posts:follow_index', None),
+            ('posts:profile_follow', (self.author.username,)),
+            ('posts:profile_unfollow', (self.author.username,)),
         )
 
     def tearDown(self):
         cache.clear()
 
     def test_reverse(self):
+        """
+        Проверка работы функции reverse():
+        соответствия имени приложения и имён пути отображаемому адресу
+        """
         reverses = (
             ('posts:index', None, '/'),
             ('posts:group_list', (self.group.slug,),
@@ -69,6 +77,10 @@ class PostUrlTests(TestCase):
                 self.assertEqual(reverse(revers, args=arg), url)
 
     def test_404(self):
+        """
+        Проверка, что при попытке перейти на несуществующую страницу,
+        пользователь получает страницу со статус кодом 404
+        """
         users = (self.client,
                  self.authorized_client,
                  self.authorized_author,)
@@ -78,9 +90,19 @@ class PostUrlTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_url_access_for_guest(self):
+        """
+        Проверка доступа к страницам неавторизованным пользователем
+        """
         for page, arg in self.pages:
             with self.subTest(page=page):
-                if page in ['posts:post_create', 'posts:post_edit']:
+                if page in [
+                    'posts:post_create',
+                    'posts:post_edit',
+                    'posts:add_comment',
+                    'posts:follow_index',
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                ]:
                     target_page = reverse(page, args=arg)
                     response = self.client.get(
                         target_page,
@@ -98,9 +120,22 @@ class PostUrlTests(TestCase):
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_url_access_for_authorized(self):
+        """
+        Проверка доступа к страницам авторизованным пользователем
+        """
         for page, arg in self.pages:
             with self.subTest(page=page):
-                if page == 'posts:post_edit':
+                if page == 'posts:add_comment':
+                    form_data = {'text': 'Новый коментарий'}
+                    response = self.authorized_client.post(
+                        reverse('posts:add_comment', args=(self.post.id,)),
+                        form_data
+                    )
+                    self.assertRedirects(
+                        response,
+                        reverse('posts:post_detail', args=(self.post.id,))
+                    )
+                elif page == 'posts:post_edit':
                     response = self.authorized_client.get(
                         reverse(page, args=arg),
                         follow=True
@@ -109,6 +144,18 @@ class PostUrlTests(TestCase):
                         response,
                         reverse('posts:post_detail', args=(self.post.id,))
                     )
+                elif page in [
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                ]:
+                    response = self.authorized_client.get(
+                        reverse(page, args=arg),
+                        follow=True
+                    )
+                    self.assertRedirects(
+                        response,
+                        reverse('posts:profile', args=(self.author.username,))
+                    )
                 else:
                     response = self.authorized_client.get(
                         reverse(page, args=arg)
@@ -116,12 +163,40 @@ class PostUrlTests(TestCase):
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_url_access_for_author(self):
+        """
+        Проверка доступа к страницам авторизованным пользователем,
+        который является автором поста
+        """
         for page, arg in self.pages:
             with self.subTest(page=page):
-                response = self.authorized_author.get(reverse(page, args=arg))
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                if page == 'posts:add_comment':
+                    form_data = {'text': 'Новый коментарий'}
+                    response = self.authorized_author.post(
+                        reverse('posts:add_comment', args=(self.post.id,)),
+                        form_data
+                    )
+                    self.assertRedirects(
+                        response,
+                        reverse('posts:post_detail', args=(self.post.id,))
+                    )
+                elif page in [
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                ]:
+                    response = self.authorized_client.get(
+                        reverse(page, args=arg),
+                        follow=True
+                    )
+                    self.assertRedirects(
+                        response,
+                        reverse('posts:profile', args=(self.author.username,))
+                    )
+                else:
+                    response = self.authorized_author.get(reverse(page, args=arg))
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_used_template(self):
+        """Проверка соответствия шаблона используемого страницей"""
         templates = (
             ('posts:index', None, 'posts/index.html'),
             ('posts:group_list', (self.group.slug,), 'posts/group_list.html'),
