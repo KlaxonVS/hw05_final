@@ -260,6 +260,15 @@ class TestPostViews(TestCase):
         follow_count2 = Follow.objects.count()
         self.assertEqual(follow_count, follow_count2)
 
+    def test_self_follow(self):
+        """Проверка, что нельзя подписаться на самого себя"""
+        follow_count = Follow.objects.count()
+        self.authorized_author.get(
+            reverse('posts:profile_follow', args=(self.author.username,))
+        )
+        follow_count2 = Follow.objects.count()
+        self.assertEqual(follow_count, follow_count2)
+
     def test_cash(self):
         """Проверка работы кэша главной страницы"""
         new_post = {'text': 'Проверка кэша', }
