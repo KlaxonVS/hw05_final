@@ -45,7 +45,10 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(Post.objects.prefetch_related('commented'), pk=post_id)
+    post = get_object_or_404(
+        Post.objects.prefetch_related('commented'),
+        pk=post_id
+    )
     form = CommentForm()
     list_to_page = post.commented.all()
     comments = paginate_me(request, list_to_page)

@@ -192,7 +192,9 @@ class PostUrlTests(TestCase):
                         reverse('posts:profile', args=(self.author.username,))
                     )
                 else:
-                    response = self.authorized_author.get(reverse(page, args=arg))
+                    response = self.authorized_author.get(
+                        reverse(page, args=arg)
+                    )
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_used_template(self):
