@@ -125,20 +125,15 @@ class PostUrlTests(TestCase):
         """
         for page, arg in self.pages:
             with self.subTest(page=page):
-                if page == 'posts:add_comment':
+                if page in [
+                    'posts:add_comment',
+                    'posts:post_edit',
+                ]:
+
                     form_data = {'text': 'Новый коментарий'}
                     response = self.authorized_client.post(
-                        reverse('posts:add_comment', args=(self.post.id,)),
-                        form_data
-                    )
-                    self.assertRedirects(
-                        response,
-                        reverse('posts:post_detail', args=(self.post.id,))
-                    )
-                elif page == 'posts:post_edit':
-                    response = self.authorized_client.get(
                         reverse(page, args=arg),
-                        follow=True
+                        form_data if page == 'posts:add_comment' else None,
                     )
                     self.assertRedirects(
                         response,

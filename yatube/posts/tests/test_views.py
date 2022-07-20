@@ -137,7 +137,7 @@ class TestPostViews(TestCase):
             reverse('posts:profile', args=(self.author.username,))
         )
         following_check = unauth_response.context['following']
-        self.assertEqual(following_check, None)
+        self.assertEqual(following_check, False)
 
     def test_post_detail_context(self):
         """Проверка context страницы поста"""
