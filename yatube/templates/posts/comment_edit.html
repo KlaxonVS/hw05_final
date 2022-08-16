@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if form.instance.pk %}Редактировать запись{% else %}Добавить запись{% endif %} 
+{% endblock %}
+{% block content %}
+{% load user_filters %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+      <div class="card">
+        <div class="card-header">
+          Редактировать комментарий:
+        </div>
+        <div class="card-body">
+          {% load user_filters %}
+          {% include 'includes/error_block.html' %}
+          <form method="post" action="{% url 'posts:comment_edit' form.instance.pk %}">
+          {% csrf_token %}
+            <div class="form-group mb-2">
+              {{ form.text|addclass:"form-control" }}
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %} 

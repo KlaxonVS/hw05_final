@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import PostForm, CommentForm
-from .models import Group, Post, Follow
+from .models import Comment, Group, Post, Follow
 from .utils import paginate_me
 
 
@@ -97,6 +97,26 @@ def add_comment(request, post_id):
 
 
 @login_required
+def comment_edit(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    if request.user != comment.author:
+        return redirect('posts:post_detail', comment.post.pk)
+
+    form = CommentForm(request.POST or None, files=request.FILES or None,
+                       instance=comment)
+    if form.is_valid():
+        form.save()
+        return redirect('posts:post_detail', comment.post.pk)
+    return render(request, 'posts/comment_edit.html', {'form': form})
+
+
+@login_required
+def comment_delete(request, comment_id, post_id):
+    Comment.objects.get(author=request.user, pk=comment_id).delete()
+    return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
 def follow_index(request):
     follower = request.user
     list_to_page = Post.objects.select_related('author', 'group').filter(
@@ -121,3 +141,12 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     Follow.objects.get(user=request.user, author__username=username).delete()
     return redirect('posts:profile', username=username)
+
+
+@login_required
+def post_delete(request, post_id):
+    Post.objects.get(author=request.user, pk=post_id).delete()
+    return redirect('posts:profile', username=request.user.username)
+
+
+

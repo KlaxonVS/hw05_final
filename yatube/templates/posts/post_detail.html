@@ -41,6 +41,7 @@
           <p>{{ post.text|linebreaks }}</p>
           {% if request.user.is_authenticated and post.author == user %}
             <a href="{% url 'posts:post_edit' post.pk %}">Редактировать</a>
+            <a href="{% url 'posts:post_delete' post.pk %}">Удалить</a>
           {% endif %}
           <hr>
           {% include 'posts/includes/comment_form.html' %}

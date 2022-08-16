@@ -14,6 +14,12 @@ urlpatterns = [
     path('posts/<int:post_id>/comment/',
          views.add_comment,
          name='add_comment'),
+    path('comment/<int:comment_id>/comment_edit/',
+         views.comment_edit,
+         name='comment_edit'),
+    path('posts/<int:post_id>/comment/<int:comment_id>/delete/',
+         views.comment_delete,
+         name='comment_delete'),
     path('follow/', views.follow_index, name='follow_index'),
     path(
         'profile/<str:username>/follow/',
@@ -24,5 +30,10 @@ urlpatterns = [
         'profile/<str:username>/unfollow/',
         views.profile_unfollow,
         name='profile_unfollow'
+    ),
+    path(
+        'posts/<int:post_id>/delete/',
+        views.post_delete,
+        name='post_delete'
     ),
 ]

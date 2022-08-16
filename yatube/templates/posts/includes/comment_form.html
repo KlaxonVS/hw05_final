@@ -26,6 +26,14 @@
         <p>
          {{ comment.text|linebreaks }}
         </p>
+        {% if user == comment.author %}
+          <a href="{% url 'posts:comment_edit' comment.pk %}">
+            Редактировать
+          </a>
+          <a href="{% url 'posts:comment_delete' comment_id=comment.pk post_id=comment.post.pk %}">
+            Удалить
+          </a>
+        {% endif %}
       </div>
     </div>
 {% endfor %}
