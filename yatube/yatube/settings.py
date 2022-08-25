@@ -1,9 +1,13 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = '3pzmmzguj+@n@7x88($z@a&el&y1+u^ptn=^!5pm0jjeq_x1p%'
+SECRET_KEY = os.getenv('DJANGO_KEY')
 
 DEBUG = True
 
